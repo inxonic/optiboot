@@ -350,6 +350,9 @@ void appStart(uint8_t rstFlags) __attribute__ ((naked));
 #elif defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
 #define RAMSTART (0x100)
 #define NRWWSTART (0x1800)
+#elif defined(__AVR_ATmega8515__)
+#define RAMSTART (0x60)
+#define NRWWSTART (0x1800)
 #endif
 
 /* C zero initialises all global variables. However, that requires */
@@ -401,6 +404,21 @@ void appStart(uint8_t rstFlags) __attribute__ ((naked));
 # define UART_UDR UDR3
 #endif
 
+# define UCSR0A UCSRA
+# define UCSR0B UCSRB
+# define UCSR0C UCSRC
+# define UBRR0L UBRRL
+# define UDR0 UDR
+# define UDRE0 UDRE
+# define RXC0 RXC
+# define FE0 FE
+
+# define TIFR1 TIFR
+
+# define WDTCSR WDTCR
+
+# define MCUSR MCUCSR
+
 /* main program starts here */
 int main(void) {
   uint8_t ch;
@@ -424,7 +442,7 @@ int main(void) {
   // If not, uncomment the following instructions:
   // cli();
   asm volatile ("clr __zero_reg__");
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__) || defined (__AVR_ATmega8515__)
   SP=RAMEND;  // This is done by hardware reset
 #endif
 
@@ -438,7 +456,7 @@ int main(void) {
   TCCR1B = _BV(CS12) | _BV(CS10); // div 1024
 #endif
 #ifndef SOFT_UART
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__) || defined (__AVR_ATmega8515__)
   UCSRA = _BV(U2X); //Double speed mode USART
   UCSRB = _BV(RXEN) | _BV(TXEN);  // enable Rx & Tx
   UCSRC = _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);  // config USART; 8N1
@@ -449,6 +467,12 @@ int main(void) {
   UART_SRC = _BV(UCSZ00) | _BV(UCSZ01);
   UART_SRL = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #endif
+#endif
+
+#if OSCCAL_FROM_EEPROM > 0
+  EEAR = 0;
+  EECR = _BV(EERE);
+  OSCCAL = EEDR;
 #endif
 
   // Set up watchdog to trigger after 500ms
@@ -677,7 +701,7 @@ uint8_t getch(void) {
   uint8_t ch;
 
 #ifdef LED_DATA_FLASH
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__) || defined (__AVR_ATmega8515__)
   LED_PORT ^= _BV(LED);
 #else
   LED_PIN |= _BV(LED);
@@ -727,7 +751,7 @@ uint8_t getch(void) {
 #endif
 
 #ifdef LED_DATA_FLASH
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__) || defined (__AVR_ATmega8515__)
   LED_PORT ^= _BV(LED);
 #else
   LED_PIN |= _BV(LED);
@@ -776,7 +800,7 @@ void flash_led(uint8_t count) {
     TCNT1 = -(F_CPU/(1024*16));
     TIFR1 = _BV(TOV1);
     while(!(TIFR1 & _BV(TOV1)));
-#if defined(__AVR_ATmega8__)  || defined (__AVR_ATmega32__)
+#if defined(__AVR_ATmega8__)  || defined (__AVR_ATmega32__) || defined (__AVR_ATmega8515__)
     LED_PORT ^= _BV(LED);
 #else
     LED_PIN |= _BV(LED);

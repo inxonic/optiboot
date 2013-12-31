@@ -103,7 +103,7 @@ STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
 
 
 OBJ        = $(PROGRAM).o
-OPTIMIZE = -Os -fno-inline-small-functions -fno-split-wide-types -mshort-calls
+OPTIMIZE = -Os -fno-inline-small-functions -fno-split-wide-types
 
 DEFS       = 
 LIBS       =
@@ -166,8 +166,13 @@ ifdef SINGLESPEED
 SSCMD = -DSINGLESPEED=1
 endif
 
+ifdef OSCCAL_FROM_EEPROM
+OSCCAL_FROM_EEPROM_CMD = -DOSCCAL_FROM_EEPROM=1
+endif
+
 COMMON_OPTIONS = $(BAUD_RATE_CMD) $(LED_START_FLASHES_CMD) $(BIGBOOT_CMD)
 COMMON_OPTIONS += $(SOFT_UART_CMD) $(LED_DATA_FLASH_CMD) $(LED_CMD) $(SSCMD)
+COMMON_OPTIONS += $(OSCCAL_FROM_EEPROM_CMD)
 
 #UART is handled separately and only passed for devices with more than one.
 ifdef UART
@@ -354,6 +359,25 @@ atmega32_isp: HFUSE ?= CE
 # 2.7V brownout, 16MHz Xtal, 16KCK/14CK+65ms
 atemga32_isp: LFUSE ?= BF
 atmega32_isp: isp
+
+# ATmega8515
+#
+atmega8515: TARGET = atmega8515
+atmega8515: MCU_TARGET = atmega8515
+atmega8515: CFLAGS += $(COMMON_OPTIONS)
+atmega8515: AVR_FREQ ?= 16000000L
+atmega8515: LDSECTIONS  = -Wl,--section-start=.text=0x1e00 -Wl,--section-start=.version=0x1ffe
+atmega8515: $(PROGRAM)_atmega8515.hex
+atmega8515: $(PROGRAM)_atmega8515.lst
+
+atmega8515_isp: atmega8515
+atmega8515_isp: TARGET = atmega8515
+atmega8515_isp: MCU_TARGET = atmega8515
+# SPIEN, CKOPT (for full swing xtal), Bootsize=512B
+atmega8515_isp: HFUSE ?= CC
+# 2.7V brownout, 16MHz Xtal, 16KCK/14CK+65ms
+atmega8515_isp: LFUSE ?= BF
+atmega8515_isp: isp
 
 
 
