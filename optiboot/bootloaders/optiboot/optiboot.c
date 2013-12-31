@@ -405,21 +405,6 @@ void appStart(uint8_t rstFlags) __attribute__ ((naked));
 # define UART_UDR UDR3
 #endif
 
-# define UCSR0A UCSRA
-# define UCSR0B UCSRB
-# define UCSR0C UCSRC
-# define UBRR0L UBRRL
-# define UDR0 UDR
-# define UDRE0 UDRE
-# define RXC0 RXC
-# define FE0 FE
-
-# define TIFR1 TIFR
-
-# define WDTCSR WDTCR
-
-# define MCUSR MCUCSR
-
 /* main program starts here */
 int main(void) {
   uint8_t ch;
