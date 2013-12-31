@@ -90,8 +90,16 @@ GCCROOT = $(TOOLROOT)/avr/bin/
 AVRDUDE_CONF = -C$(TOOLROOT)/avr/etc/avrdude.conf
 
 else
+# Other ENV, not arduino, not arduinodev
+# Use the default PATH, unless ARDUINOROOT is set
+ifdef ARDUINOROOT
+GCCROOT = $(ARDUINOROOT)/hardware/tools/avr/bin/
+AVRDUDE_CONF = $(ARDUINOROOT)/hardware/tools/avrdude.conf
+else
 GCCROOT =
 AVRDUDE_CONF =
+endif
+
 endif
 
 STK500 = "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
@@ -583,8 +591,8 @@ atmega328_pro8: TARGET = atmega328_pro_8MHz
 atmega328_pro8: CHIP = atmega328
 atmega328_pro8:
 	$(MAKE) $(CHIP) AVR_FREQ=8000000L LED_START_FLASHES=3
-	mv $(PROGRAM)_$(CHIP).hex $(PROGRAM)_$(TARGET).hex
-	mv $(PROGRAM)_$(CHIP).lst $(PROGRAM)_$(TARGET).lst
+	mv $(PROGRAM)_$(CHIP).hex $(PROGRAM)_$(TARGET)_baud$(BAUD_RATE).hex
+	mv $(PROGRAM)_$(CHIP).lst $(PROGRAM)_$(TARGET)_baud$(BAUD_RATE).lst
 
 atmega328_pro8_isp: atmega328_pro8
 atmega328_pro8_isp: TARGET = atmega328_pro_8MHz
@@ -632,7 +640,8 @@ FORCE:
 
 baudcheck: FORCE
 	- @$(CC) $(CFLAGS) -E baudcheck.c -o baudcheck.tmp.sh
-	- @sh baudcheck.tmp.sh
+	- @bash baudcheck.tmp.sh
+	- @rm -f baudcheck.tmp.sh
 
 isp: $(TARGET)
 	$(MAKE) -f Makefile.isp isp TARGET=$(TARGET)
